@@ -68,7 +68,7 @@ This project implements a real-time analytics pipeline for NYC 311 service reque
    - Zookeeper (port 2181)
    - Kafka (port 9092)
 
-   The default topic created is `test-topic`. The producer will use `nyc311_requests` (created automatically if it doesn't exist).
+   The default topic created is `test-topic`. The producer will use `nyc311-service-requests` (created automatically if it doesn't exist).
 
 2. **Check Kafka containers**:
    ```bash
@@ -89,25 +89,48 @@ This project implements a real-time analytics pipeline for NYC 311 service reque
    python nyc311_producer.py
    ```
 
-   The producer will fetch the latest NYC 311 requests every 60 seconds and send them to the Kafka topic `nyc311_requests`.
+   The producer fetches the latest NYC 311 requests every 60 seconds and sends them to the Kafka topic `nyc311-service-requests`.
+
+## Running the Consumer
+
+1. **Start the Consumer**:
+
+   ```bash
+   python nyc311_kafka_to_mongo.py
+   ```
+
+   The consumer reads messages from the Kafka topic `nyc311-service-requests` and writes them to a MongoDB collection named `service_requests`.
+
+## Visualizing Data
+
+1. **Run the Visualization Script**:
+
+   ```bash
+   python visualize_complaints.py
+   ```
+
+   This script connects to MongoDB, retrieves data from the `service_requests` collection, and generates visualizations such as complaint type distributions.
 
 ## Project Structure
 
 ```
 labs/kafka_codes/
-├── venv/                   # Virtual environment (after setup)
-├── docker-compose.yml      # Kafka infrastructure setup
-├── requirements.txt        # Python dependencies
-├── nyc311_producer.py     # Main producer code
-└── README.md              # This file
+├── api_health_check.py      # API health check script
+├── docker-compose.yml       # Kafka infrastructure setup
+├── nyc311_producer.py       # Kafka producer for NYC 311 requests
+├── nyc311_kafka_to_mongo.py # Kafka consumer to MongoDB pipeline
+├── visualize_complaints.py  # Data visualization script
+├── requirements.txt         # Python dependencies
+├── README.md                # Project documentation
+└── tmp/                     # Spark checkpoint directory
 ```
 
 ## Notes
 
-- The producer will create the topic `nyc311_requests` if it does not exist.
+- The producer creates the topic `nyc311-service-requests` if it does not exist.
 - The Docker Compose file uses wurstmeister images for Kafka and Zookeeper.
-- No Kafka UI is included; use command-line tools or your own UI if needed.
-- All dependencies are now minimal and compatible with the provided code.
+- MongoDB is used for storing service requests for further analysis.
+- Visualizations are generated using Matplotlib and Pandas.
 
 ## Cleaning Up
 
@@ -145,10 +168,16 @@ The dataset contains all service requests made through 311 in New York City. Eac
 python nyc311_producer.py
 ```
 
-2. In a separate terminal, start the Spark consumer:
+2. In a separate terminal, start the Kafka consumer:
 
 ```bash
-python nyc311_consumer.py
+python nyc311_kafka_to_mongo.py
+```
+
+3. Run the visualization script:
+
+```bash
+python visualize_complaints.py
 ```
 
 ## Analytics Output
