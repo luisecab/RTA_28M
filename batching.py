@@ -5,7 +5,7 @@ import time
 from confluent_kafka import Consumer
 from pymongo import MongoClient
 
-BATCH_SIZE = 100  # You can adjust this
+BATCH_SIZE = 1000
 
 print("PYTHON EXE:", sys.executable)
 print("PATH:", os.environ.get("PATH"))

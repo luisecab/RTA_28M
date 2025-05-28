@@ -28,7 +28,7 @@ This project implements a real-time analytics pipeline for NYC 311 service reque
 3. **Create and Activate Virtual Environment**:
 
    ```powershell
-   cd "C:\Users\foxtrot\OneDrive - SGH\Semester 4\rta\kafka_nyc311_project\labs\kafka_codes"
+   cd "D:\projects\kafka_codes"
    python -m venv venv
    .\venv\Scripts\Activate.ps1
    ```
@@ -44,7 +44,7 @@ This project implements a real-time analytics pipeline for NYC 311 service reque
 1. **Create and Activate Virtual Environment**:
 
    ```bash
-   cd /path/to/kafka_nyc311_project/labs/kafka_codes
+   cd /path/to/kafka_codes
    python3 -m venv venv
    source venv/bin/activate
    ```
@@ -57,7 +57,9 @@ This project implements a real-time analytics pipeline for NYC 311 service reque
 
 ## Kafka Infrastructure
 
-1. **Start Kafka and Zookeeper with Docker Compose**:
+### Start Kafka and Zookeeper with Docker Compose
+
+1. **Run Docker Compose**:
 
    ```bash
    docker-compose up -d
@@ -68,35 +70,45 @@ This project implements a real-time analytics pipeline for NYC 311 service reque
    - Zookeeper (port 2181)
    - Kafka (port 9092)
 
-   The default topic created is `test-topic`. The producer will use `nyc311-service-requests` (created automatically if it doesn't exist).
+2. **Verify Kafka Containers**:
 
-2. **Check Kafka containers**:
    ```bash
    docker ps
    ```
 
-## Running the Producer
+   Ensure the Kafka and Zookeeper containers are running.
 
-1. **Start the Producer**:
-
-   ```powershell
-   python nyc311_producer.py
+3. **Stop Docker Compose** (when done):
+   ```bash
+   docker-compose down
    ```
 
-   or (Linux/Mac):
+## Running the Producer
 
-   ```bash
-   python nyc311_producer.py
+1. **Open a new terminal**.
+2. **Activate the virtual environment**:
+   ```powershell
+   .\venv\Scripts\Activate.ps1
+   ```
+3. **Run the Producer**:
+
+   ```powershell
+   python scripts/nyc311-service-requests.py
    ```
 
    The producer fetches the latest NYC 311 requests every 60 seconds and sends them to the Kafka topic `nyc311-service-requests`.
 
 ## Running the Consumer
 
-1. **Start the Consumer**:
+1. **Open another terminal**.
+2. **Activate the virtual environment**:
+   ```powershell
+   .\venv\Scripts\Activate.ps1
+   ```
+3. **Run the Consumer**:
 
-   ```bash
-   python nyc311_kafka_to_mongo.py
+   ```powershell
+   python scripts/nyc311_kafka_to_mongo.py
    ```
 
    The consumer reads messages from the Kafka topic `nyc311-service-requests` and writes them to a MongoDB collection named `service_requests`.
@@ -106,7 +118,7 @@ This project implements a real-time analytics pipeline for NYC 311 service reque
 1. **Run the Visualization Script**:
 
    ```bash
-   python visualize_complaints.py
+   python scripts/visualize_complaints.py
    ```
 
    This script connects to MongoDB, retrieves data from the `service_requests` collection, and generates visualizations such as complaint type distributions.
@@ -114,76 +126,28 @@ This project implements a real-time analytics pipeline for NYC 311 service reque
 ## Project Structure
 
 ```
-labs/kafka_codes/
-├── api_health_check.py      # API health check script
-├── docker-compose.yml       # Kafka infrastructure setup
-├── nyc311_producer.py       # Kafka producer for NYC 311 requests
-├── nyc311_kafka_to_mongo.py # Kafka consumer to MongoDB pipeline
-├── visualize_complaints.py  # Data visualization script
-├── requirements.txt         # Python dependencies
-├── README.md                # Project documentation
-└── tmp/                     # Spark checkpoint directory
+kafka_codes/
+├── scripts/                # Python scripts
+│   ├── batching.py         # Kafka consumer with batch processing
+│   ├── plot_batches.py     # Visualization of batch ingestion
+│   ├── nyc311-service-requests.py # Kafka producer for NYC 311 requests
+│   ├── nyc311_kafka_to_mongo.py # Kafka consumer to MongoDB pipeline
+│   ├── api_health_check.py # API health check script
+│   └── visualize_complaints.py  # Data visualization script
+├── logs/                   # Log files
+│   └── batch_log.csv       # Batch ingestion logs
+├── data/                   # Data files
+│   └── sample_data.json    # Example data for testing
+├── tmp/                    # Temporary files
+│   └── spark_checkpoints/  # Spark checkpoint directory
+├── docker-compose.yml      # Kafka infrastructure setup
+├── requirements.txt        # Python dependencies
+├── README.md               # Project documentation
+└── .venv/                  # Virtual environment (optional, not committed to version control)
 ```
 
 ## Notes
 
+- Ensure Docker is running before starting Kafka and Zookeeper.
+- MongoDB must be running locally or accessible remotely for the consumer and visualization scripts.
 - The producer creates the topic `nyc311-service-requests` if it does not exist.
-- The Docker Compose file uses wurstmeister images for Kafka and Zookeeper.
-- MongoDB is used for storing service requests for further analysis.
-- Visualizations are generated using Matplotlib and Pandas.
-
-## Cleaning Up
-
-1. **Stop the Services**:
-   ```powershell
-   docker-compose down
-   ```
-2. **Deactivate Virtual Environment**:
-   ```powershell
-   deactivate
-   ```
-
-## Data Source
-
-**NYC Open Data – 311 Service Requests Dataset**
-
-- **API Endpoint:** https://data.cityofnewyork.us/resource/erm2-nwe9.json
-- **Dataset ID:** erm2-nwe9
-- **Documentation:** [NYC Open Data – 311 Service Requests](https://data.cityofnewyork.us/Social-Services/311-Service-Requests-from-2010-to-Present/erm2-nwe9/about_data)
-
-The dataset contains all service requests made through 311 in New York City. Each record includes:
-
-- Unique identifier
-- Created date and time
-- Complaint type
-- Location (address, ZIP code, borough)
-- Status
-- Responding agency
-
-## Running the Pipeline
-
-1. Start the Kafka producer:
-
-```bash
-python nyc311_producer.py
-```
-
-2. In a separate terminal, start the Kafka consumer:
-
-```bash
-python nyc311_kafka_to_mongo.py
-```
-
-3. Run the visualization script:
-
-```bash
-python visualize_complaints.py
-```
-
-## Analytics Output
-
-The consumer processes the data and outputs three types of analytics:
-
-1. **Complaint Type Analysis**: Counts of complaints by type in 1-hour windows
-2. **ZIP Code Hotspots**: Areas with high complaint volumes (>10 complaints in 30 minutes)
-3. **Agency Performance**: Complaint status by agency in 1-hour windows
